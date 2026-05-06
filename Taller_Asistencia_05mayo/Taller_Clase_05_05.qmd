@@ -1,0 +1,66 @@
+---
+title: "Practica 05/05/2026"
+author:
+  - "Luis Gálvez"
+lang: es
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: simple
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    documentclass: article
+execute:
+  echo: false
+  warning: false
+  message: false
+jupyter: python3
+---
+
+# Ejercicios
+
+## Ejercicio 1 -- Calculo de distancias
+Suponga que desea realizar una parada en Las Vegas en el trayecto de San Francisco a Nueva York.
+Calcule la distancia elipsoidal total considerando la parada en Las Vegas.
+
+El resultado fue de 4271.028453371624. Se obtuvo luego de sumar las distancias geodesica de las lineas que unen los puntos de San Francisco - Las vegas y Las vegas - Nueva York tras definir un elipsoide sobre el cual medir. La conversión de unidades de realizó empleando d.convertLengthMeasurement que usa como parametros de entrada la distancia como valor y las unidades a las que se desea hacer la conversión, esto evita el hacer el calculo manualmente.
+
+## Ejercicio 2 -- Construcción de un cuadro de diálogo
+La clase QMessage Box (De qt) permite generar cuadros con los que el usuario interactúa. En él se pueden establecer botones estandar que ejecután acciones concretas (que se definen dentro del codigo), los botones estandar pueden se "OK", "Open", "save", "Cancel", "Close", entre otros. Las acciones que ejecuten los botones pueden ser establecidas por default o dentro del codigo pytho a través de condicionales.
+
+## Ejercicio 3 -- message bar
+En el ejemplo anterior, la alerta se muestra en la message bar (barra de mensajes) de QGIS como un mensaje de información (Info). Cambie el tipo de mensaje a una advertencia (Warning).
+
+Sugerencia: Consulte el método apropiado en la clase QgsMessageBar.
+
+Reto: El mensaje de advertencia no tiene un tiempo de expiración y debe cerrarse manualmente. Modifique la solución para mostrar un mensaje de advertencia con un tiempo de expiración de 5 segundos. Sugerencia: Revise el método pushMessage().
+
+Al usar "pushMessage" se puede modificar el nivel de la advertencia, hay 4 opciones: Info, Warning, Critical y Succes. Para establecerlo se usa pushMessage (En vez de pushCritical) y como parametro se pone "level" = Warning, de igual forma para establecer la duración, se puede introducir como parametro "duration" = 5, por default la unidad son segundos. 
+
+## Ejercicio 4 - Escriba un fragmento de código que verifique la capa activa seleccionada por el usuario. Si la capa activa se denomina sf_zoning, muestre un mensaje de éxito en la Message bar (Barra de mensajes); de lo contrario, muestre un mensaje de error.
+
+Escriba un fragmento de código que verifique la capa activa seleccionada por el usuario. Si la capa activa se denomina sf_zoning, muestre un mensaje de éxito en la Message bar (Barra de mensajes); de lo contrario, muestre un mensaje de error.
+
+::: {.callout-note}
+##  Identificación y validación de capa en QGIS
+
+```python
+
+layer = iface.activeLayer()
+
+name = layer.name()
+
+if name == "sf — zoning":
+    iface.messageBar().pushMessage("Exito", "su capa seleccionada es sf_zoning", level=Qgis.Success)
+else:
+    iface.messageBar().pushMessage("Error", "su capa seleccionada no es sf_zoning", level=Qgis.Warning)
+
+:::
+
+
+
+
