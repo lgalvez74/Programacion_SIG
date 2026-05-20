@@ -1,0 +1,46 @@
+---
+title: "Practica - 18 Fundamentos raster"
+author:
+  - "Luis Gálvez"
+lang: es
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: simple
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    documentclass: article
+execute:
+  echo: true
+  warning: false
+  message: false
+jupyter: python3
+---
+
+
+
+
+# Evaluación
+
+## 1. Análisis de Metadatos y Gestión de Memoria:
+Se le ha entregado un Modelo Digital de Elevación de alta resolución (0.5m) que cubre toda la extensión del departamento de Antioquia, con un tamaño físico en disco de 14 GB. Usted dispone de una estación de trabajo con 8 GB de memoria RAM. Explique técnicamente por qué la ejecución de los comandos de apertura como `rasterio.open()` (Python), `rast()` (R) o `Raster()` (Julia) no genera un error de *Out of Memory* (OOM). Especifique qué información se transfiere realmente a la memoria volátil durante la ejecución de esa primera instrucción.
+
+### Desarrollo 
+
+Usar rasterio.open(), rast() o Raster() permite realizar la apertura de un raster sin que se produzcan errores de memoria, por que estas funciones no cargan inmediatamente todos los pixeles del arvhivo en la RAM.Es decir que transfiere a memoria unicamente la estructura de los metadatos y el manejador del arvhivo, las dimensiones de la matriz, numero de bandas, tipo de dato, src, resolicopm espacial, extension, rutas de accreso y otras caracteristicas. De manera que el raster queda representado como un objeto proxy o de conexión al disco, y sus valores se leen bajo demanda, es decir que se leen unicamente cuando se ejecutan operaciones sobre ellos, lo que optimiza el uso de la memoria y permite trabajar con datasets mas grandes.
+
+
+
+## 2. Sistemas de Referencia en Datos Legados:
+Al inspeccionar los metadatos de un mosaico de imágenes históricas provisto por el IGAC, identifica mediante la cadena *Proj4* que el CRS nativo del archivo corresponde a un sistema obsoleto basado en el Datum Bogotá 1941 (`+ellps=intl`). Describa la implicación metodológica de este hallazgo. ¿Qué procedimiento obligatorio debe aplicarse a esta matriz antes de ejecutar una operación de intersección espacial contra la base catastral actual de Bogotá, proyectada en MAGNA-SIRGAS Origen Nacional (EPSG:9377)?
+
+### Desarrollo 
+
+Implica que sus coordenadas poseen desplazamientos espaciales respecto a MAGNA-SIRGAS, por lo que no son directamente compatibles con la cartografía actual. Antes de realizar cualquier operación espacial es obligatorio realizar una transformación (Se usa la transformación cuando los src se sustentan sobre elipsoides distintos) de datum y reproyección del raster desde Bogotá 1941 hacia MAGNA-SIRGAS Origen Nacional (EPSG:9377), de no hacer esto podrian ocurrir errores de estimación de áreas, desplazamientos, sobreposiciones, y en general problemas asociados a que el archivo no representa de manera acertada la realidad espacial del objeto. 
+
+
+

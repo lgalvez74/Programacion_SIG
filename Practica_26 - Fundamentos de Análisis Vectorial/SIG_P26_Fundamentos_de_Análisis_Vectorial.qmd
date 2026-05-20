@@ -1,0 +1,272 @@
+---
+title: "Practica - 26 Fundamentos de Análisis Vectorial"
+author:
+  - "Luis Gálvez"
+lang: es
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: simple
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    documentclass: article
+execute:
+  echo: true
+  warning: false
+  message: false
+jupyter: python3
+---
+
+
+# Ejercicios
+
+## Ejercicio 1: Instanciación y Tablas Espaciales (Río Cauca)
+
+Contexto: El equipo de Gestión del Riesgo te ha entregado un reporte tabular con las estaciones de monitoreo de calidad del agua sobre un tramo del Río Cauca y los barrios aledaños en riesgo de inundación. Tu misión es convertir estos datos planos en objetos espaciales oficiales.
+
+Instrucciones algorítmicas:
+
+    Crea un DataFrame clásico (no espacial) con la siguiente información de zonas de riesgo:
+        Columna Barrio: “La Virginia”, “Puerto Mallarino”
+        Columna Riesgo: “Alto”, “Medio”
+        Columna Lon: -75.88, -76.21
+        Columna Lat: 4.90, 3.95
+
+    Utiliza la función apropiada de tu ecosistema para convertir ese DataFrame en una Tabla Espacial. Asegúrate de mapear las columnas Lon y Lat como geometrías de tipo Point.
+
+    Al realizar la conversión, asigna explícitamente el Sistema de Referencia de Coordenadas geográficas estándar (EPSG:4326).
+
+    Imprime en consola la tabla espacial resultante y verifica que la columna de geometría se haya creado correctamente.
+
+
+
+### Desarrollo
+
+```{python eval=false}
+
+# Ejercicio 1
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point
+
+# Crear DataFrame clásico
+df = pd.DataFrame({
+    "Barrio": ["La Virginia", "Puerto Mallarino"],
+    "Riesgo": ["Alto", "Medio"],
+    "Lon": [-75.88, -76.21],
+    "Lat": [4.90, 3.95]
+})
+
+# Convertir coordenadas en geometrías tipo Point
+geometrias = [Point(xy) for xy in zip(df["Lon"], df["Lat"])]
+
+# Crear GeoDataFrame asignando CRS EPSG:4326
+gdf = gpd.GeoDataFrame(
+    df,
+    geometry=geometrias,
+    crs="EPSG:4326"
+)
+
+# Imprimir tabla espacial
+print(gdf)
+
+# Imprimir sistema de referencia
+print("\nSistema de referencia:")
+print(gdf.crs)
+
+
+```
+
+
+## Ejercicio 2: Geoprocesamiento y Topología
+
+Contexto: Se planea construir una planta de tratamiento de aguas entre las dos estaciones del ejercicio anterior. Necesitas modelar la conexión y evaluar si el área de impacto de la vía proyectada afecta a las zonas de riesgo.
+
+Instrucciones algorítmicas:
+
+    Extrae las geometrías de los dos puntos creados en el Ejercicio 1 (La Virginia y Puerto Mallarino).
+    Proyecta ambos puntos al sistema métrico oficial de Colombia (MAGNA-SIRGAS Origen Nacional, EPSG:9377) para poder realizar cálculos en metros. (Nota: Deberás investigar cómo hacer la transformación de CRS st_transform / to_crs en tu lenguaje).
+    Construye una geometría tipo Línea (LineString) que conecte ambos puntos proyectados. Esta línea representa el acueducto proyectado.
+    Genera un Área de influencia (Buffer) de 5,000 metros (5 km) alrededor de la línea del acueducto.
+    Utiliza un predicado espacial (ej. intersects o contains) para evaluar mediante código si el punto de “Puerto Mallarino” se encuentra dentro del área del buffer generado. Imprime el resultado booleano (True/False).
+
+
+### Desarrollo
+
+```{python eval=false}
+
+# Ejercicio 2
+
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point, LineString
+
+# -----------------------------------------------------------
+# Crear DataFrame clásico
+
+df = pd.DataFrame({
+    "Barrio": ["La Virginia", "Puerto Mallarino"],
+    "Riesgo": ["Alto", "Medio"],
+    "Lon": [-75.88, -76.21],
+    "Lat": [4.90, 3.95]
+})
+
+# -----------------------------------------------------------
+# Convertir a GeoDataFrame (EPSG:4326)
+
+gdf = gpd.GeoDataFrame(
+    df,
+    geometry=gpd.points_from_xy(df["Lon"], df["Lat"]),
+    crs="EPSG:4326"
+)
+
+print("GeoDataFrame original:")
+print(gdf)
+
+# -----------------------------------------------------------
+# Proyectar a MAGNA-SIRGAS Origen Nacional (EPSG:9377)
+
+gdf_proj = gdf.to_crs(epsg=9377)
+
+print("\nGeoDataFrame proyectado:")
+print(gdf_proj)
+
+# -----------------------------------------------------------
+# Extraer los puntos proyectados
+
+punto_1 = gdf_proj.loc[gdf_proj["Barrio"] == "La Virginia", "geometry"].values[0]
+punto_2 = gdf_proj.loc[gdf_proj["Barrio"] == "Puerto Mallarino", "geometry"].values[0]
+
+# -----------------------------------------------------------
+# Crear línea (LineString)
+
+linea_acueducto = LineString([punto_1, punto_2])
+
+# -----------------------------------------------------------
+# Crear buffer de 5 km (5000 metros)
+
+buffer_5km = gpd.GeoSeries([linea_acueducto], crs="EPSG:9377").buffer(5000)
+
+# -----------------------------------------------------------
+# Evaluar si Puerto Mallarino está dentro del buffer
+
+dentro_buffer = buffer_5km.iloc[0].contains(punto_2)
+
+print("\n¿Puerto Mallarino está dentro del buffer?")
+print(dentro_buffer)
+
+
+```
+
+
+## Ejercicio 3: Referenciación Lineal (Segmentación Dinámica)
+
+Contexto: Durante la construcción del acueducto (la línea creada en el ejercicio anterior), se reporta un fallo geológico exactamente al 35% del recorrido desde el punto inicial.
+
+Instrucciones algorítmicas:
+
+    Tomando la línea del acueducto proyectada en EPSG:9377, utiliza la función de interpolación normalizada de tu lenguaje para encontrar la coordenada exacta (Punto) donde ocurre el fallo (al 0.35 de la longitud total).
+    Extrae e imprime en consola las coordenadas e (Este y Norte) de este nuevo punto interpolado.
+
+
+
+### Desarrollo
+
+```{python eval=false}
+
+# Ejercicio 3
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point, LineString
+
+# -----------------------------------------------------------
+# Crear datos originales
+
+df = pd.DataFrame({
+    "Barrio": ["La Virginia", "Puerto Mallarino"],
+    "Riesgo": ["Alto", "Medio"],
+    "Lon": [-75.88, -76.21],
+    "Lat": [4.90, 3.95]
+})
+
+# -----------------------------------------------------------
+# Convertir a GeoDataFrame (EPSG:4326)
+
+gdf = gpd.GeoDataFrame(
+    df,
+    geometry=gpd.points_from_xy(df["Lon"], df["Lat"]),
+    crs="EPSG:4326"
+)
+
+# -----------------------------------------------------------
+# Proyectar a EPSG:9377
+
+gdf_proj = gdf.to_crs(epsg=9377)
+
+# -----------------------------------------------------------
+# Extraer puntos proyectados
+
+punto_inicio = gdf_proj.loc[
+    gdf_proj["Barrio"] == "La Virginia",
+    "geometry"
+].values[0]
+
+punto_final = gdf_proj.loc[
+    gdf_proj["Barrio"] == "Puerto Mallarino",
+    "geometry"
+].values[0]
+
+# -----------------------------------------------------------
+# Crear línea del acueducto
+
+linea_acueducto = LineString([punto_inicio, punto_final])
+
+# -----------------------------------------------------------
+#  Interpolar punto al 35% del recorrido
+#    normalized=True usa proporción de la longitud total
+
+
+punto_fallo = linea_acueducto.interpolate(0.35, normalized=True)
+
+# -----------------------------------------------------------
+# Extraer coordenadas Este (X) y Norte (Y)
+
+este = punto_fallo.x
+norte = punto_fallo.y
+
+# -----------------------------------------------------------
+# Imprimir resultados
+
+print("Punto del fallo geológico (35% del recorrido):")
+print(punto_fallo)
+
+print("\nCoordenadas proyectadas:")
+print(f"Este (X): {este:.2f} metros")
+print(f"Norte (Y): {norte:.2f} metros")
+
+```
+
+
+##  Preguntas 
+
+1. Sobre la Topología: Basado en las lecturas, ¿por qué es crítico respetar el orden matemático al momento de construir geometrías en lugar del orden verbal cotidiano “Latitud, Longitud”?
+
+2. Sobre la Proyección y el Geoprocesamiento: Explica con tus palabras por qué el Buffer del Ejercicio 2 debía hacerse después de transformar los datos al EPSG:9377. ¿Qué hubiera ocurrido topológica y matemáticamente si le aplicabas un buffer de “5000” a los puntos cuando aún estaban en EPSG:4326?
+
+3. Sobre la Referenciación Lineal: Si el acueducto del Ejercicio 3 tuviera un eje (Medida) que almacenara el kilometraje real de la tubería, ¿qué ventaja operativa traería esto frente a la interpolación por porcentaje (0.35) que acabas de realizar?
+
+
+### Desarrollo
+
+1. Se debe responder el oreden matematico de los sitemas de informacion geografica debido a que estos usan la convención cartesiana, es decir X, Y o (Longitud, Latitud), sin embargo en el lenguaje cotidiano se usa Latitud y Longitud, por lo que de usarse así tabien en el SIG se invertirian totalmente las coordenadas y el punto no representaria la realidad geografica que deberia, lo cual afecta las propiedades de las entidades desde puntos hasta redes y poligonos, compromete toda la topologia.
+
+2. Si se aplica unn buffer sobre un SRC no proyectado (Como el EPSG: 4326) las unidades serán dadas en grados, por lo que si se ingresa como parametro de entrada 500 para el buffer las unidades seran en grados, lo cual es un sin sentido, se debe proyectar para que se ejecute el buffer en unidades metricas y no angulares.
+
+3. Sería posible localizar eventos usando distancias exactas de operación, sin depender de porcentajes relativos, lo que facilita el mantenimiento, la inspección y el monitoreo, porque las posiciones permanecen estables aunque cambie la longitud total de la línea por modificaciones futuras.
+
+
+
