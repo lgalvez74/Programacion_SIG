@@ -1,0 +1,92 @@
+---
+title: "Practica - 7 Operaciones con Cadenas de Texto (Strings)"
+author:
+  - "Luis Gálvez"
+lang: es
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: simple
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    documentclass: article
+execute:
+  echo: true
+  warning: false
+  message: false
+jupyter: python3
+---
+
+# Practica 26/05/2026 - Ejercicios en ArcPy
+
+## Fase  1 - Fundamentos y exploración del Workspace (Preguntas 1 a 5)
+
+- Pregunta 1: ¿Cómo listar y verificar la existencia de las capas base en una Geodatabase?
+
+La función "arcpy.ListFeatureClasses" permite listar las capas que cumplan con un atributo de geometria (Que se ingresa como parametro de entrada en la función)
+
+- Pregunta 2: ¿Cómo describir las propiedades de un Feature Class y su Sistema de Referencia Espacial?
+
+La función "arcpy.Describe()" Crea una variable tipo "geoprocessing describe data object" con los atributos de la capa que se introduzca como entrada. Los atributos se pueden consultar usando comandos como "{desc.name}", "{desc.shapeType}" o "{desc.OIDFieldName}", donde desc es la variable en la que se almacenaron los resultados de la función.
+
+- Pregunta 3: ¿Cómo verificar y crear un Feature Dataset para organizar datos por escenarios?
+
+Se crea con la función "arcpy.management.CreateFeatureDataset" ingresando como parametros de entrada la ruta de la gdb, el nombre del dataset y el SRC que usará. En caso de que ya exista y se desee verificar, se utiliza la función "arcpy.Exists", que debe contener la ruta y el nombre del dataset
+
+- Pregunta 4: ¿Cómo listar los campos de una tabla y conocer sus tipos de datos?
+
+La función "arcpy.ListFields" crea una lista con los campos de la capa que se ingrese como parametro de entrada a la función, y consultar atributos como el tipo, la longitud o el nombre.
+
+- Pregunta 5: ¿Cómo realizar un conteo rápido de registros filtrados sin cargar los datos en memoria?
+
+La funcion "arcpy.management.GetCount()" recibe como parametros de entrada una capa vectorial y cuenta el numero de registros que contiene.
+
+## Fase 2 - Filtrado lógico y Consultas Atributivas
+
+Pregunta 6: ¿Cómo crear una capa temporal en memoria (Feature Layer) para aplicar filtros?
+
+La función "arcpy.management.MakeFeatureLayer" recibe como parametros de entrada el nombre de la capa que actua como base para crear la capa temporal y el nombre de la capa temporal. Esto permite aplicar filtros que de otra manera no se podrian ya que es imposible aplicar filtros directos a entidades que esten grabadas en el disco.
+
+Pregunta 7: ¿Cómo aplicar una selección por atributos basada en sintaxis SQL?
+
+La funcion "arcpy.management.SelectLayerByAttribute" refcibe como atributos la capa sobre la que trabaja y la expresión sql que utiliza para seleccionar los atributos. Luego se utiliza "arcpy.management.GetCount" sobre la capa filtrada para reconocer cuantos elementos fueron filtrados.
+
+Pregunta 8: ¿Cómo exportar permanentemente los datos filtrados a un nuevo Feature Class?
+
+La funcion "arcpy.management.CopyFeatures" recibe como parametros de entrada la capa a exportar y la ruta sobre la cual debe tranajar. De esta manera puede exportar la capa y grabarla fisicamente sobre la ruta indicada.
+
+Pregunta 9: ¿Cómo construir una consulta SQL compuesta para el Filtro 2 (Atributos Ambientales)?
+
+Esta vez se aplica el filtro SQL dentro del operador try para evitar que colapse el codigo. Funciona de igual manera, se construye la condicion del filtro como una cadena de texto y se introduce como parametro en la función "arcpy.management.SelectLayerByAttribute"
+
+Pregunta 10: ¿Cómo limpiar selecciones y eliminar capas temporales de la memoria?
+
+Se crea una lista con el nombre de las capas, y dentro de un ciclo for se borra la capa si existe y si tiene coincidencia con los nombres de la lista.
+
+## Fase 3 - Acceso Eficiente a Datos y Módulo arcpy.da
+
+Pregunta 11: ¿Cómo leer atributos específicos utilizando un cursor de búsqueda (SearchCursor)?
+
+Pregunta 12: ¿Cómo extraer valores únicos de una columna utilizando un cursor y estructuras de Python?
+
+Pregunta 13: ¿Cómo convertir una tabla geográfica directamente en una matriz de NumPy?
+
+Pregunta 14: ¿Cómo crear una tabla física en la Geodatabase a partir de una matriz de datos en memoria?
+
+Pregunta 15: ¿Cómo modificar registros específicos utilizando un cursor de actualización (UpdateCursor)?
+
+## Fase 4 - Referenciación Lineal y Segmentación Dinámica 
+
+Pregunta 16: ¿Cómo inspeccionar las propiedades de una ruta y sus campos de referenciación lineal (LRS)?
+
+Pregunta 17: ¿Cómo programar segmentación dinámica desde tablas sintéticas y automatizar su carga cartográfica en la TOC?
+
+## Fase 5 - Automatización Cartográfica de Proyectos y Layouts 
+
+Pregunta 18: ¿Cómo iterar y modificar dinámicamente los elementos de texto de un Layout de impresión?
+
+Pregunta 19: ¿Cómo reencuadrar el mapa (Pan to Extent) automáticamente a los resultados del análisis y exportar a PNG?
